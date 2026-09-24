@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define MAX 1024
+
 struct Person {
     char name[40];
     int phone_number;
     struct Person* next;
 };
+
+struct Person* pool = NULL;
+int count;
 
 void inputInfo(struct Person* person) {
     printf("请输入要插入的联系人的姓名：");
@@ -18,11 +23,19 @@ void inputInfo(struct Person* person) {
 void addPerson(struct Person **head) {
     struct Person* person;
     static struct Person* tail;
-
-    person = (struct Person*)malloc(sizeof(struct Person));
-    if (person == NULL) {
-        printf("内存分配失败！");
-        exit(1);
+    //如果内存池池不为空则从中获取空间
+    if (pool != NULL) {
+        person = pool;
+        pool = pool -> next;
+        count --;
+    }
+    //如果内存池为空，则调用malloc申请新的空间
+    else {
+        person = (struct Person*)malloc(sizeof(struct Person));
+        if (person == NULL) {
+            printf("内存分配失败！");
+            exit(1);
+        }
     }
     inputInfo(person);
     if (*head != NULL) {
@@ -78,6 +91,7 @@ void changePerson(struct Person *head) {
 void delPerson(struct Person** head,char name[]) {
     struct Person* previous;
     struct Person* current;
+    struct Person* temp;
 
     current = *head;
     previous = NULL;
@@ -96,7 +110,22 @@ void delPerson(struct Person** head,char name[]) {
         else {
             previous -> next = current -> next;
         }
-        free(current);
+
+        //判断内存池是否有空位
+        if (count < MAX) {
+            if (pool != NULL) {
+                temp = pool;
+                pool = current;
+                current -> next = temp;
+            }
+            else {
+                pool = current;
+                current -> next = NULL;
+            }
+        }
+        else {
+            free(current);
+        }
     }
 }
 
@@ -125,6 +154,16 @@ void release(struct Person** head) {
         else {
             break;
         }
+    }
+}
+
+void releasePool(void) {
+    struct Person* temp;
+
+    while (pool != NULL) {
+        temp = pool;
+        pool = pool -> next;
+        free(temp);
     }
 }
 /*
@@ -177,6 +216,7 @@ int main(void) {
             case 6: {
                 printf("已退出程序\n");
                 release(&head);
+                releasePool();
                 return 0;
             }
             default:printf("无效的操作数：%d\n",func_num);
