@@ -122,6 +122,7 @@ void delPerson(struct Person** head,char name[]) {
                 pool = current;
                 current -> next = NULL;
             }
+            count ++;
         }
         else {
             free(current);
