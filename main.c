@@ -23,7 +23,7 @@ void inputInfo(struct Person* person) {
 void addPerson(struct Person **head) {
     struct Person* person;
     static struct Person* tail;
-    //如果内存池池不为空则从中获取空间
+    //如果内存池不为空则从中获取空间
     if (pool != NULL) {
         person = pool;
         pool = pool -> next;
